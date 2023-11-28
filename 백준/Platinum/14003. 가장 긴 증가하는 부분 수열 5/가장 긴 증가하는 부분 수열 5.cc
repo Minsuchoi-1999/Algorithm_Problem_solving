@@ -18,7 +18,7 @@
 
 using namespace std;
 
-#define FOR(i, n) for (long long i = 0; i < n; i++)
+#define FOR(i, n) for (int i = 0; i < n; i++)
 #define INF 1234567890
 #define MAX 1234567891
 #define MOD 1234567891
@@ -34,28 +34,28 @@ using namespace std;
 
 #define modulo(S, N) ((S) & (N - 1)) // returns S % N, where N is a power of 2
 #define isPowerOfTwo(S) (!(S & (S - 1)))
-#define nearestPowerOfTwo(S) ((long long)pow(2.0, (long long)((log((double)S) / log(2.0)) + 0.5)))
+#define nearestPowerOfTwo(S) ((int)pow(2.0, (int)((log((double)S) / log(2.0)) + 0.5)))
 #define turnOffLastBit(S) ((S) & (S - 1))
 #define turnOnLastZero(S) ((S) | (S + 1))
 #define turnOffLastConsecutiveBits(S) ((S) & (S + 1))
 #define turnOnLastConsecutiveZeroes(S) ((S) | (S - 1))
 
-typedef long long ll;
-typedef pair<long long, long long> ii;
-typedef vector<long long> vi;
+typedef int ll;
+typedef pair<int, int> ii;
+typedef vector<int> vi;
 typedef vector<ii> vii;
 typedef vector<bool> vb;
 
-long long n;
-vector<long long> arr;
-vector<long long> dp;
-vector<long long> lis;
+int n;
+vector<int> arr;
+vector<int> dp;
+vector<int> result;
 
-long long binary_search(long long start, long long end, long long element)
+int binary_search(int start, int end, int element)
 {
     while (start < end)
     {
-        long long mid = (start + end) / 2;
+        int mid = (start + end) / 2;
         if (element > dp[mid])
             start = mid + 1;
         else
@@ -77,46 +77,54 @@ signed main(int argc, char **argv)
     cin >> n;
 
     arr.resize(n);
-    for (long long i = 0; i < n; i++)
+    result.resize(n);
+
+    for (int i = 0; i < n; i++)
     {
         cin >> arr[i];
     }
 
     dp.push_back(arr[0]);
-    lis.push_back(1); // 부분 수열의 길이를 기록하는 벡터를 추가
+    result[0] = 1;
 
-    for (long long i = 1; i < n; i++)
+    int ret;
+
+    for (int i = 1; i < n; i++)
     {
         if (arr[i] > dp.back())
         {
             dp.push_back(arr[i]);
-            lis.push_back(dp.size()); // 부분 수열의 길이 갱신
+            ret = dp.size();
+            result[i] = ret;
         }
         else
         {
-            long long pos = binary_search(0, dp.size(), arr[i]);
+            int pos = binary_search(0, dp.size(), arr[i]);
             dp[pos] = arr[i];
-            lis.push_back(pos + 1); // 부분 수열의 길이 갱신
+            result[i] = pos + 1;
         }
     }
-
-    long long ret = dp.size();
+    
+    ret = dp.size();
 
     cout << ret << '\n';
 
-    vector<long long> result;
-    for (long long i = n - 1; i >= 0; i--)
+    int cnt = ret;
+    stack<int> st;
+
+    for (int i = n; i >= 0; i--)
     {
-        if (lis[i] == ret)
+        if (cnt == result[i])
         {
-            result.push_back(arr[i]);
-            ret--;
+            st.push(arr[i]);
+            cnt--;
         }
     }
 
-    for (long long i = result.size() - 1; i >= 0; i--)
+    while (!st.empty())
     {
-        cout << result[i] << " ";
+        cout << st.top() << " ";
+        st.pop();
     }
-    return 0;
+    cout << "\n";
 }
