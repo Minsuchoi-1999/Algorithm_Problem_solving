@@ -1,84 +1,137 @@
-#include<iostream>
-#include<string>
-#include<map>
+#define _CRT_SECURE_NO_WARNINGS
+#include <stdlib.h>
+#include <iostream>
+#include <stdio.h>
+#include <vector>
+#include <queue>
+#include <string>
+#include <algorithm>
+#include <cmath>
+#include <cstring>
+#include <map>
+#include <set>
+#include <unordered_set>
+#include <unordered_map>
+#include <list>
+#include <stack>
+#include <climits>
+
 using namespace std;
 
-// 각 달의 일 수
-int monthDays[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
-struct user
+#define FOR(i, n) for (int i = 0; i < n; i++)
+#define INF 1234567890
+#define MAX 1234567891
+#define MOD 1234567891
+#define ALL(x) x.begin(), x.end()
+#define UNIQUE(c) (c).resize(unique(ALL(c)) - (c).begin())
+
+#define isOn(S, j) (S & (1 << j))
+#define setBit(S, j) (S |= (1 << j))
+#define clearBit(S, j) (S &= ~(1 << j))
+#define toggleBit(S, j) (S ^= (1 << j))
+#define lowBit(S) (S & (-S))
+#define setAll(S, n) (S = (1 << n) - 1)
+
+#define modulo(S, N) ((S) & (N - 1)) // returns S % N, where N is a power of 2
+#define isPowerOfTwo(S) (!(S & (S - 1)))
+#define nearestPowerOfTwo(S) ((int)pow(2.0, (int)((log((double)S) / log(2.0)) + 0.5)))
+#define turnOffLastBit(S) ((S) & (S - 1))
+#define turnOnLastZero(S) ((S) | (S + 1))
+#define turnOffLastConsecutiveBits(S) ((S) & (S + 1))
+#define turnOnLastConsecutiveZeroes(S) ((S) | (S - 1))
+
+typedef int ll;
+typedef pair<int, int> ii;
+typedef vector<int> vi;
+typedef vector<vi> vvi;
+typedef vector<ii> vii;
+typedef vector<bool> vb;
+
+long long days[13] = {0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+
+map<string, long long> visited;
+vector<pair<string, long long>> answer;
+
+long long str_to_day(string date)
 {
-	string name;
-	int rentalTime;
-};
+    long long month = (long long)stoi(date.substr(5, 2));
+    long long day = 0;
 
-// 달 => 일 변환
-int MonthToDay(int month)
-{
-	if (month == 1)return 0;
+    for (long long i = 0; i < month; i++)
+    {
+        day += days[i];
+    }
+    day += (long long)stoi(date.substr(8, 2));
 
-	int days = 0;
-
-	for (int i = 0; i < month - 1; i++)
-		days += monthDays[i];
-
-	return days;
+    return day;
 }
 
-int main()
+long long str_to_minute(string time)
 {
-	ios_base::sync_with_stdio(false); cout.tie(NULL); cin.tie(NULL);
+    long long hour = (long long)stoi(time.substr(0, 2));
+    long long minute = (long long)stoi(time.substr(3, 2));
 
-	int len;
-	int fine;
-	string sDuration;
-	int duration = 0;
-	map<string, map<string, user>> rentals;
-	map<string, long long> fineReports;
+    return hour * 60 + minute;
+}
 
-	cin >> len >> sDuration >> fine;
+map<pair<string, string>, long long> dict;
 
-	duration += stoi(sDuration.substr(0, 3)) * 1440;		// Day
-	duration += stoi(sDuration.substr(4, 2)) * 60;			// Hour	
-	duration += stoi(sDuration.substr(7, 2));				// Minute
+signed main(int argc, char **argv)
+{
+#ifndef ONLINE_JUDGE
+    freopen("input.txt", "r", stdin);
+    freopen("output.txt", "w", stdout);
+#endif
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
+    cout.tie(nullptr);
 
-	for (int i = 0; i < len; i++)
-	{
-		string ymd, time, part, name;
-		int curTime = 0;
-		cin >> ymd >> time >> part >> name;
+    long long num_of_queries, deadline, penalty;
+    cin >> num_of_queries;
 
-		curTime += MonthToDay(stoi(ymd.substr(5, 2))) * 1440;	// Month
-		curTime += stoi(ymd.substr(8, 2)) * 1440;				// Day
-		curTime += stoi(time.substr(0, 2)) * 60;				// Hour
-		curTime += stoi(time.substr(3, 2));						// Minute
+    string str_deadline;
+    cin >> str_deadline;
 
-		// 대여 목록에서 찾는다면
-		if (rentals.find(part) != rentals.end() && rentals[part].find(name) != rentals[part].end())
-		{
-			int rentalDuration = curTime - rentals[part][name].rentalTime;
+    long long day = (long long)stoi(str_deadline.substr(0, 3));
+    long long hour = (long long)stoi(str_deadline.substr(4, 2));
+    long long minute = (long long)stoi(str_deadline.substr(7, 2));
 
-			if (rentalDuration > duration)
-			{
-            	// 대여 기간을 넘었다면 벌금 부과
-				fineReports[name] += (long long)((rentalDuration - duration) * fine);
-			}
-		
-        	// 리셋
-			rentals[part].erase(name);
+    deadline = day * 60 * 24 + hour * 60 + minute;
 
-			if (rentals[part].empty())
-				rentals.erase(part);
-		}
-		else
-			rentals[part][name] = { name, curTime };
-	}
+    cin >> penalty;
 
+    for (long long i = 0; i < num_of_queries; i++)
+    {
+        string date, time, div, person;
+        cin >> date >> time >> div >> person;
 
-	// 벌금을 낼 사람이 없다면 -1 출력
-	if (fineReports.empty()) cout << -1;
-	else
-	{
-		for (auto user : fineReports)
-			cout << user.first << " " << user.second << '\n';
-	}
+        long long q_minute = str_to_minute(time);
+        long long q_day = str_to_day(date);
+
+        if (dict[{div, person}] == 0)
+        {
+            dict[{div, person}] = q_day * 60 * 24 + q_minute;
+        }
+        else
+        {
+            long long borrow_min = q_day * 60 * 24 + q_minute - dict[{div, person}];
+            if (borrow_min > deadline)
+            {
+                visited[person] += (borrow_min - deadline) * penalty;
+            }
+            dict[{div, person}] = 0;
+        }
+    }
+
+    if (visited.size() == 0)
+    {
+        cout << "-1";
+    }
+    else
+    {
+        for (auto iter : visited)
+        {
+            cout << iter.first << " " << iter.second << "\n";
+        }
+    }
 }
