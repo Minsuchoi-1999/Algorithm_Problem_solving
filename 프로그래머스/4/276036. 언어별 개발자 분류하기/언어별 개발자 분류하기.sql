@@ -1,48 +1,39 @@
-# A : Front End 스킬과 Python 스킬을 함께 가지고 있는 개발자
-# B : C# 스킬을 가진 개발자
-# C : 그 외의 Front End 개발자
+WITH
+  group_front_end AS (
+    SELECT DISTINCT ID, EMAIL
+    FROM developers d
+    JOIN skillcodes s ON (d.skill_code & s.CODE) > 0 AND s.category = 'Front End'
+  ),
+  group_python AS (
+    SELECT DISTINCT ID, EMAIL
+    FROM developers d
+    JOIN skillcodes s ON (d.skill_code & s.CODE) > 0 AND s.name = 'Python'
+  ),
+  group_Csharp AS (
+    SELECT DISTINCT ID, EMAIL
+    FROM developers d
+    JOIN skillcodes s ON (d.skill_code & s.CODE) > 0 AND s.name = 'C#'
+  ),
+  group_a AS (
+    SELECT 'A' as GRADE, ID, EMAIL
+    FROM developers
+    WHERE ID IN (SELECT ID FROM group_front_end) AND ID IN (SELECT ID FROM group_python)
+  ),
+  group_b AS (
+    SELECT 'B' as GRADE, ID, EMAIL
+    FROM developers
+    WHERE ID IN (SELECT ID FROM group_Csharp) AND ID not in (select ID from group_a)
+  ),
+  group_c AS (
+    SELECT 'C' as GRADE, ID, EMAIL
+    FROM developers
+    WHERE ID IN (SELECT ID FROM group_front_end) AND ID not in (select ID from group_a) AND ID not in (select ID from group_b)
+  )
 
-# 일단 하나씩 구해보자
-with a_grade as (
-    select "A" grade, d.*
-    from developers d
-    where skill_code & (
-        select sum(code) 
-        from skillcodes 
-        where category = 'Front End' 
-        group by category
-    )
-        and skill_code & (
-            select code 
-            from skillcodes 
-            where name = 'Python'
-    )
-), b_grade as (
-    select "B" grade, d.*
-    from developers d
-    where skill_code & (
-        select code 
-        from skillcodes 
-        where name = 'C#'
-        and d.id not in (select id from a_grade)
-    )
-), c_grade as (
-    select "C" grade, d.*
-    from developers d
-    where skill_code & (
-        select sum(code)
-        from skillcodes
-        where category = 'Front End'
-        group by category
-    ) and d.id not in (select id from a_grade) and d.id not in (select id from b_grade)
-)
 
-select u.grade, u.id, u.email
-from (
-    select * from a_grade
-    union
-    select * from b_grade
-    union
-    select * from c_grade
-) u
-order by u.grade, u.id;
+SELECT * FROM group_a 
+UNION 
+SELECT * FROM group_b 
+UNION 
+SELECT * FROM group_c
+ORDER BY 1, 2;
