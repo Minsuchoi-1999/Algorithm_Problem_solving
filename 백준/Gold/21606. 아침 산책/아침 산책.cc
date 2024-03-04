@@ -7,16 +7,18 @@ using namespace std;
 
 long long n;
 long long node_info[200001];
+long long visited[200001];
 
 vector<vector<long long>> graphs;
 
 long long brute_force(long long prev, long long cur)
 {
-    // cout << prev << " " << cur << "\n";
-    if (prev != cur && node_info[cur])
+    if (node_info[cur])
     {
         return 1;
     }
+
+    visited[cur] = 1;
 
     long long ret = 0;
 
@@ -47,6 +49,8 @@ int main()
 
     graphs = vector<vector<long long>>(n + 1);
 
+    long long roads = 0;
+
     for (long long i = 0; i < n - 1; i++)
     {
         long long node1, node2;
@@ -54,15 +58,17 @@ int main()
 
         graphs[node1].push_back(node2);
         graphs[node2].push_back(node1);
-    }
 
-    long long roads = 0;
+        if (node_info[node1] && node_info[node2])
+            roads += 2;
+    }
 
     for (long long i = 1; i <= n; i++)
     {
-        if (node_info[i])
+        if (!node_info[i] && !visited[i])
         {
-            roads += brute_force(i, i);
+            int on_nodes = brute_force(i, i);
+            roads += on_nodes * (on_nodes - 1);
         }
     }
 
